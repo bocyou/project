@@ -1,22 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/sendfile.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
-#include <pthread.h>
-
-#define MAX 1024
-#define HOME_PAGE "index.html"
-#define PAGE_404 "wwwroot/404.html" 
+#include "Log.h"
 
 static void usage(const char *proc)
 {
@@ -148,6 +130,7 @@ int exec_cgi(int sock, char *method, char *path, char *query_string)
 
 	pid_t id = fork();
 	if(id < 0){
+		LOG(ERROR, "fork error");
 		return 500;
 	}
 	else if(id == 0){
@@ -249,10 +232,12 @@ void *handlerRequest(void *arg) //请求行
 	char *query_string = NULL;
 
 	getLine(sock, line, sizeof(line));
-	printf("%s", line);
+	//printf("%s", line);
 
-	int i = 0;
-	int j = 0;
+	LOG(INFO, "Start parsing the first line");
+
+	size_t i = 0;
+	size_t j = 0;
 	while(i < sizeof(method)-1 && j < sizeof(line) && \
           !isspace(line[j])){
 		method[i] = line[j];
@@ -270,7 +255,8 @@ void *handlerRequest(void *arg) //请求行
         i++, j++;
 	}
 	url[i] = '\0'; 
-	printf("method: %s, url: %s\n", method, url);
+	//printf("method: %s, url: %s\n", method, url);
+	LOG(INFO, "frst line parse done");
 
 	//忽略大小写比较
 	//有传参,模式改为cgi
@@ -284,8 +270,10 @@ void *handlerRequest(void *arg) //请求行
 	else{ //method error
 		status_code = 400;
 		clearHeaer(sock); //清理头部
+		LOG(WARNING, "method error");
 		goto end;
 	}
+	LOG(INFO, "method parse done");
 
 	if(strcasecmp(method, "GET") == 0){
 		query_string = url;
@@ -311,6 +299,7 @@ void *handlerRequest(void *arg) //请求行
 	if(stat(path, &st) < 0){
 		status_code = 404;
 		clearHeaer(sock);
+		LOG(WARNING, "path not found");
 		goto end;
 	}
 	else{
@@ -323,6 +312,7 @@ void *handlerRequest(void *arg) //请求行
 		}
 
 		//method, path, cgi, get->query_string
+		LOG(INFO, "starting responce");
 		if(cgi == 1){
 			status_code = exec_cgi(sock, method, path, query_string);
 		}else{
@@ -344,6 +334,7 @@ end:
 	if(status_code != 200){
 		echoErrMsg(sock, status_code);
 	}
+	LOG(INFO, "close sock");
 	close(sock);
 }
 
@@ -354,6 +345,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	LOG(INFO, "Start server");
 	int listen_sock = startup(atoi(argv[1]));
 	for( ; ; ){
 		struct sockaddr_in client;
@@ -364,6 +356,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
+		LOG(INFO, "get a new link");
 		pthread_t tid;
 		pthread_create(&tid, NULL, handlerRequest, (void *)sock);
 		pthread_detach(tid);

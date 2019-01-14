@@ -25,6 +25,8 @@ clean:
 output:
 	mkdir -p output/wwwroot
 	mkdir -p output/wwwroot/cgi
+	mkdir -p output/wwwroot/C
+	mkdir -p output/wwwroot/C++
 	mkdir -p output/lib
 	cp httpd output
 	cp start.sh output
@@ -33,7 +35,8 @@ output:
 	cp wwwroot/code-blast.js output/wwwroot
 	cp wwwroot/codemirror -r output/wwwroot
 	cp wwwroot/cgi/math_cgi output/wwwroot/cgi
-	cp wwwroot/cgi/input output/wwwroot/cgi
+	cp wwwroot/C/input output/wwwroot/C/
+	cp wwwroot/C++/input output/wwwroot/C++
 	cp sql_connect/insert_cgi output/wwwroot/cgi
 	cp sql_connect/select_cgi output/wwwroot/cgi
 
