@@ -1,7 +1,7 @@
 WORK_DIR=$(shell pwd)
-cc=gcc
+cc=g++
 bin=httpd
-src=httpd.c
+src=httpd.cc
 LDFLAGS=-lpthread
 
 .PHONY:all
