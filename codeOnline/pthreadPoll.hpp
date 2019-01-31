@@ -81,6 +81,7 @@ class threadPoll {
 			while(_idle_num > 0) {
 				wakeUpAllThread();
 			}
+			unlockQueue();
 		}
 
 		~threadPoll() {

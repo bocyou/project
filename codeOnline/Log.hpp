@@ -24,6 +24,8 @@
 #define MAX 1024
 #define HOME_PAGE "index.html"
 #define PAGE_404 "wwwroot/404.html"
+#define PAGE_400 "wwwroot/400.html"
+#define PAGE_500 "wwwroot/500.html"
 
 
 #define INFO 0

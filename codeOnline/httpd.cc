@@ -1,12 +1,26 @@
 #include "Log.hpp"
 #include "pthreadPoll.hpp"
 
-static void usage(const char *proc)
+///////////////////////////////////////////////////////////////
+void usage(const char* );
+int startup(int );
+int getLine(int, char*, int);
+void clearHeaer(int );
+void show_400(int );
+void show_404(int );
+void show_500(int );
+void echoErrMsg(int , int );
+int exec_cgi(int , char*, char*, char* );
+int echo_www(int , char*, int );
+int handlerRequest(int );
+///////////////////////////////////////////////////////////////
+
+void usage(const char *proc)
 {
 	printf("Usage %s [port]\n", proc);
 }
 
-static int startup(int port)
+int startup(int port)
 {
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(sock < 0){
@@ -35,7 +49,7 @@ static int startup(int port)
 	return sock;
 }
 
-static int getLine(int sock, char line[], int len)
+int getLine(int sock, char line[], int len)
 {
 	char c = '\0';
 	int i = 0;
@@ -57,7 +71,7 @@ static int getLine(int sock, char line[], int len)
 	return i;
 }
 
-static void clearHeaer(int sock) //清理头部
+void clearHeaer(int sock) //清理头部
 {
 	char line[MAX];
 	do{
@@ -65,13 +79,31 @@ static void clearHeaer(int sock) //清理头部
 	}while(strcmp("\n", line));
 }
 
+void show_400(int sock) 
+{
+	char line[MAX];
+	struct stat st;
+	sprintf(line, "HTTP/1.0 400 Bad Request\r\n");
+	send(sock, line, strlen(line), 0);
+	sprintf(line, "Content-Type: text/html;charset=utf-8\r\n");
+	send(sock, line, strlen(line), 0);
+	sprintf(line, "\r\n");
+	send(sock, line, strlen(line), 0);
+
+	int fd = open(PAGE_400, O_RDONLY);
+
+	stat(PAGE_400, &st);
+	sendfile(sock, fd, NULL, st.st_size);
+	close(fd);
+}
+
 void show_404(int sock)
 {
 	char line[MAX];
 	struct stat st;
-	sprintf(line, "HTTP/1.0 404 NOT FOUND\r\n");
+	sprintf(line, "HTTP/1.0 404 Not Found\r\n");
 	send(sock, line, strlen(line), 0);
-	sprintf(line, "Content-type: text/html;charset=uft-8\r\n");
+	sprintf(line, "Content-Type: text/html;charset=uft-8\r\n");
 	send(sock, line, strlen(line), 0);
 	sprintf(line, "\r\n");
 	send(sock, line, strlen(line), 0);
@@ -83,15 +115,35 @@ void show_404(int sock)
 	close(fd);
 }
 
-static void echoErrMsg(int sock, int status_code)
+void show_500(int sock) 
+{
+	char line[MAX];
+	struct stat st;
+	sprintf(line, "HTTP/1.0 500 Internal Server Error\r\n");
+	send(sock, line, strlen(line), 0);
+	sprintf(line, "Content-Type: text/html;charset=utf-8\r\n");
+	send(sock, line, strlen(line), 0);
+	sprintf(line, "\r\n");
+	send(sock, line, strlen(line), 0);
+
+	int fd = open(PAGE_500, O_RDONLY);
+
+	stat(PAGE_500, &st);
+	sendfile(sock, fd, NULL, st.st_size);
+	close(fd);
+}
+
+void echoErrMsg(int sock, int status_code)
 {
 	switch(status_code){
 		case 400:
+			show_400(sock);
 			break;
 		case 404:
 			show_404(sock);
 			break;
 		case 500:
+			show_500(sock);
 			break;
 		default:
 			break;
