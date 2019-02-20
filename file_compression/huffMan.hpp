@@ -11,3 +11,98 @@ struct huffManNode {
 };
 
 
+struct Compare {
+	bool operator()(const huffManNode<CharInfo>* w1, const huffManNode<CharInfo>* w2) {
+		return w1->_weight._charCount > w2->_weight._charCount;
+	}
+};
+
+
+template <class W>
+class huffManTree {
+	typedef struct huffManNode<W> HNode;
+	private:
+		HNode *_HRoot;
+	public:
+		huffManTree() : _HRoot(NULL) {}
+
+		void createHuffmanTree(std::vector<W> &tmpWeight, W &invalid) {
+			if(tmpWeight.size() == 0) {
+				return;
+			}
+			std::priority_queue<HNode*, std::vector<HNode*>, Compare> creatHeap;
+			HNode *pNode = NULL;
+			
+			for(size_t i = 0; i < tmpWeight.size(); i++) {
+				if(tmpWeight[i] != invalid) {
+					HNode *pCur = new HNode(tmpWeight[i]);
+					creatHeap.push(pCur);
+				}
+			}
+
+			while(!creatHeap.empty() && creatHeap.size() != 1) {
+				HNode *left = creatHeap.top();
+				creatHeap.pop();
+
+				HNode *right = creatHeap.top();
+				creatHeap.pop();
+
+				HNode *newNode = new HNode(left->_weight + right->_weight);
+				newNode->_left = left;
+				newNode->_right = right;
+				left->_parent = newNode;
+				right->_parent = newNode;
+
+				creatHeap.push(newNode);
+			}
+
+			_HRoot = creatHeap.top();
+		}
+
+		void displayCode(HNode *hRoot) {
+			if(hRoot == NULL) {
+				return;
+			}
+
+			std::cout << hRoot->_weight << std::endl;
+			displayCode(hRoot->_left);
+			displayCode(hRoot->_right);
+		}
+
+		void getCode(HNode *hRoot) {
+			if(hRoot == NULL) {
+				return;
+			}
+
+			getCode(hRoot->_left);
+			getCode(hRoot->_right);
+
+			HNode *parent = hRoot->_parent;
+			HNode *cur = hRoot;
+			if(hRoot->_left == NULL && hRoot->_right == NULL) {
+				while(parent) {
+					if(parent->_left == cur) {
+					}
+				}
+			}
+		}
+
+		HNode *getRoot() {
+			return _HRoot;
+		}
+
+		~huffManTree() {
+			destroy(_HRoot);
+		}
+	private:
+		void destroy(HNode *pRoot) {
+			if(pRoot == NULL) {
+				return;
+			}
+
+			destroy(pRoot->_left);
+			destroy(pRoot->_right);
+			delete pRoot;
+			pRoot = NULL;
+		}
+};

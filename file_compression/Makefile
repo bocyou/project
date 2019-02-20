@@ -4,7 +4,7 @@ bin=main
 src=fileCompressHuff.cc
 
 $(bin):$(src) main.cc
-	g++ $^ -o $@
+	g++ $^ -o $@ -g
 
 clean:
 	rm $(bin)
