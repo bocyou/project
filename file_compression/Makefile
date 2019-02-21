@@ -7,4 +7,4 @@ $(bin):$(src) main.cc
 	g++ $^ -o $@ -g
 
 clean:
-	rm $(bin)
+	rm $(bin) test.huff

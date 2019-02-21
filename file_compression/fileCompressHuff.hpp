@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <queue>
 #include <ostream>
+#include <algorithm>
 
 struct CharInfo {
 
@@ -28,7 +29,7 @@ struct CharInfo {
 	}
 
 	friend std::ostream& operator<<(std::ostream& out, const CharInfo& ch) {
-		out << " " << ch._charCount << "\n";
+		out << ch._ch << " " << ch._charCode <<  " " << ch._charCount << "\n";
 		return out;
 	}
 };

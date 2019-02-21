@@ -17,21 +17,19 @@ struct Compare {
 	}
 };
 
-
-template <class W>
+template <class T>
 class huffManTree {
-	typedef struct huffManNode<W> HNode;
+	typedef struct huffManNode<T> HNode;
 	private:
 		HNode *_HRoot;
 	public:
 		huffManTree() : _HRoot(NULL) {}
 
-		void createHuffmanTree(std::vector<W> &tmpWeight, W &invalid) {
+		void createHuffmanTree(std::vector<T>& tmpWeight, T& invalid) {
 			if(tmpWeight.size() == 0) {
 				return;
 			}
 			std::priority_queue<HNode*, std::vector<HNode*>, Compare> creatHeap;
-			HNode *pNode = NULL;
 			
 			for(size_t i = 0; i < tmpWeight.size(); i++) {
 				if(tmpWeight[i] != invalid) {
@@ -77,12 +75,20 @@ class huffManTree {
 			getCode(hRoot->_left);
 			getCode(hRoot->_right);
 
-			HNode *parent = hRoot->_parent;
-			HNode *cur = hRoot;
 			if(hRoot->_left == NULL && hRoot->_right == NULL) {
+				HNode *parent = hRoot->_parent;
+				HNode *cur = hRoot;
 				while(parent) {
 					if(parent->_left == cur) {
+						hRoot->_weight._charCode.insert(0, "0");
 					}
+
+					if(parent->_right == cur) {
+						hRoot->_weight._charCode.insert(0, "1");
+					}
+
+					cur = parent;
+					parent = cur->_parent;
 				}
 			}
 		}
