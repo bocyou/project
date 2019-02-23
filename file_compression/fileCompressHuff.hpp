@@ -9,6 +9,7 @@ class fileCompressHuff{
 
 		void getCharCount();
 		void writeHead(int wr_fd);
+		void getLine(int rd_fd, std::string &content);
 
 	private:
 		void _getHuffCode(huffManNode *root);

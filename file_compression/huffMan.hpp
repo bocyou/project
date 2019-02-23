@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <vector>
 #include <unistd.h>
@@ -9,11 +10,13 @@
 #include <ostream>
 #include <algorithm>
 
+typedef unsigned char UCH;
+
 struct CharInfo {
 
 	CharInfo(long long count = 0) : _ch(0), _charCount(count), _charCode("") {}
 
-	char _ch;
+	UCH _ch;
 	long long _charCount;
 	std::string _charCode;
 
