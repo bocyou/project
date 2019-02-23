@@ -1,4 +1,4 @@
-#include "huffMan.hpp"
+#include "fileCompressHuff.hpp"
 
 int main()
 {

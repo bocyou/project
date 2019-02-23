@@ -1,4 +1,4 @@
-#include "huffMan.hpp"
+#include "fileCompressHuff.hpp"
 
 fileCompressHuff::fileCompressHuff() {
 	_charInfo.resize(256);
@@ -34,14 +34,13 @@ void fileCompressHuff::compressHuff(const std::string filePath) {
 
 	// 2、创建huffman树
 	CharInfo invalid(0);
-	huffManTree<CharInfo> huffman;
+	huffManTree huffman;
 	huffman.createHuffmanTree(_charInfo, invalid);
 	//huffman.displayCode(huffman.getRoot());
 
 	// 3、获取编码
-	
-	huffman.getCode(huffman.getRoot());
-	huffman.displayCode(huffman.getRoot());
+	_getHuffCode(huffman.getRoot());
+
 	// 4、对源文件进行改写
 	
 	std::string fileName;
@@ -59,9 +58,11 @@ void fileCompressHuff::compressHuff(const std::string filePath) {
 
 	write(wr_fd, suffix.c_str(), suffix.size());
 	write(wr_fd, "\n", 1);
+	writeHead(wr_fd);
 
 	int bitCount = 0;
 	char *flag = new char(0);
+	//char flag = 0;
 	while(1) {
 		size_t readSize = read(rd_fd, readBuff, 1024);
 		if(readSize < 0) {
@@ -72,24 +73,23 @@ void fileCompressHuff::compressHuff(const std::string filePath) {
 		}
 
 		for(size_t i = 0; i < readSize; i++) {
-			std::cout << readBuff[i] << " ";
-		}
-		std::cout << std::endl;
-
-		for(size_t i = 0; i < readSize; i++) {
 			std::string tmpCode = _charInfo[readBuff[i]]._charCode;
 			for(size_t j = 0; j < tmpCode.size(); j++) {
-				if(tmpCode[i] == '1') {
-					(*flag) |= 1;
-				}
-				(*flag) <<= 1;
 				bitCount++;
+				(*flag) <<= 1;
+				if(tmpCode[j] == '1') {
+					(*flag) |= 1;
+				} 
+
 				if(bitCount == 8) {
-					std::cout << *flag << std::endl;
+					//printf("%x\n", *flag);
 					write(wr_fd, flag, 1);
-					flag = 0, bitCount = 0;
+					*flag = 0, bitCount = 0;
 				}
 			}
+		}
+		if(bitCount > 0 && bitCount < 8) {
+			write(wr_fd, flag, 1);
 		}
 	}
 
@@ -97,10 +97,54 @@ void fileCompressHuff::compressHuff(const std::string filePath) {
 	close(wr_fd);
 }
 
+void fileCompressHuff::writeHead(int wr_fd) {
+	int tmpNum = 0;
+	std::string content;
+	for(size_t i = 0; i < _charInfo.size(); i++) {
+		if(_charInfo[i]._charCount != 0) {
+			tmpNum++;
+			content += _charInfo[i]._ch;
+			content.push_back(',');
+			content += std::to_string(_charInfo[i]._charCount);
+			content += '\n';
+		}
+	}
+	std::string codeNum = std::to_string(tmpNum);
+	codeNum.push_back('\n');
+	write(wr_fd, codeNum.c_str(), codeNum.size());
+	write(wr_fd, content.c_str(), content.size());
+}
+
 void fileCompressHuff::getCharCount() {
 	std::vector<CharInfo>::iterator it = _charInfo.begin();
 	while(it != _charInfo.end()) {
 		std::cout << it->_ch << ":" << it->_charCount << ":"  <<it->_charCode  << std::endl;
 		it++;
+	}
+}
+
+void fileCompressHuff::_getHuffCode(huffManNode *root) {
+	if(root == NULL) {
+		return;
+	}
+
+	_getHuffCode(root->_left);
+	_getHuffCode(root->_right);
+
+	if(root->_left == NULL && root->_right == NULL) {
+		std::string code;
+		huffManNode *parent = root->_parent;
+		huffManNode *cur = root;
+		while(parent) {
+			if(parent->_left == cur) {
+				code.insert(0, "0");
+			}
+			if(parent->_right == cur) {
+				code.insert(0, "1");
+			}
+			cur = parent;
+			parent = cur->_parent;
+		}
+		_charInfo[root->_weight._ch]._charCode = code;
 	}
 }

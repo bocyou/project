@@ -1,31 +1,66 @@
-#include "fileCompressHuff.hpp"
+#include <iostream>
+#include <stdio.h>
+#include <string>
+#include <vector>
+#include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <queue>
+#include <ostream>
+#include <algorithm>
 
-template <class T>
+struct CharInfo {
+
+	CharInfo(long long count = 0) : _ch(0), _charCount(count), _charCode("") {}
+
+	char _ch;
+	long long _charCount;
+	std::string _charCode;
+
+	bool operator!=(const CharInfo& ch) {
+		return _charCount != ch._charCount;
+	}
+
+	bool operator==(const CharInfo& ch) {
+		return _charCount == ch._charCount;
+	}
+
+	CharInfo operator+(const CharInfo& ch) {
+		return CharInfo(_charCount + ch._charCount);
+	}
+
+	friend std::ostream& operator<<(std::ostream& out, const CharInfo& ch) {
+		out << ch._ch << " " << ch._charCode <<  " " << ch._charCount << "\n";
+		return out;
+	}
+};
+
+//template <class T>
 struct huffManNode {
-	huffManNode(const T& weight = T()) : _weight(weight), _left(NULL), _right(NULL), _parent(NULL) {}
+	huffManNode(const CharInfo& weight) : _weight(weight), _left(NULL), _right(NULL), _parent(NULL) {}
 
-	struct huffManNode<T> *_left;
-	struct huffManNode<T> *_right;
-	struct huffManNode<T> *_parent;
-	T _weight;
+	CharInfo _weight;
+	struct huffManNode *_left;
+	struct huffManNode *_right;
+	struct huffManNode *_parent;
 };
 
 
 struct Compare {
-	bool operator()(const huffManNode<CharInfo>* w1, const huffManNode<CharInfo>* w2) {
+	bool operator()(const huffManNode* w1, const huffManNode* w2) {
 		return w1->_weight._charCount > w2->_weight._charCount;
 	}
 };
 
-template <class T>
+//template <class T>
 class huffManTree {
-	typedef struct huffManNode<T> HNode;
+	typedef struct huffManNode HNode;
 	private:
 		HNode *_HRoot;
 	public:
 		huffManTree() : _HRoot(NULL) {}
 
-		void createHuffmanTree(std::vector<T>& tmpWeight, T& invalid) {
+		void createHuffmanTree(std::vector<CharInfo>& tmpWeight, CharInfo& invalid) {
 			if(tmpWeight.size() == 0) {
 				return;
 			}
@@ -67,31 +102,6 @@ class huffManTree {
 			displayCode(hRoot->_right);
 		}
 
-		void getCode(HNode *hRoot) {
-			if(hRoot == NULL) {
-				return;
-			}
-
-			getCode(hRoot->_left);
-			getCode(hRoot->_right);
-
-			if(hRoot->_left == NULL && hRoot->_right == NULL) {
-				HNode *parent = hRoot->_parent;
-				HNode *cur = hRoot;
-				while(parent) {
-					if(parent->_left == cur) {
-						hRoot->_weight._charCode.insert(0, "0");
-					}
-
-					if(parent->_right == cur) {
-						hRoot->_weight._charCode.insert(0, "1");
-					}
-
-					cur = parent;
-					parent = cur->_parent;
-				}
-			}
-		}
 
 		HNode *getRoot() {
 			return _HRoot;

@@ -1,38 +1,4 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <queue>
-#include <ostream>
-#include <algorithm>
-
-struct CharInfo {
-
-	CharInfo(long long count = 0) : _ch(0), _charCount(count), _charCode("") {}
-
-	char _ch;
-	long long _charCount;
-	std::string _charCode;
-
-	bool operator!=(const CharInfo& ch) {
-		return _charCount != ch._charCount;
-	}
-
-	bool operator==(const CharInfo& ch) {
-		return _charCount == ch._charCount;
-	}
-
-	CharInfo operator+(const CharInfo& ch) {
-		return CharInfo(_charCount + ch._charCount);
-	}
-
-	friend std::ostream& operator<<(std::ostream& out, const CharInfo& ch) {
-		out << ch._ch << " " << ch._charCode <<  " " << ch._charCount << "\n";
-		return out;
-	}
-};
+#include "huffMan.hpp"
 
 class fileCompressHuff{
 	public:
@@ -42,7 +8,10 @@ class fileCompressHuff{
 		void uncompressHuff(const std::string filePath);
 
 		void getCharCount();
+		void writeHead(int wr_fd);
 
+	private:
+		void _getHuffCode(huffManNode *root);
 	private:
 		std::vector<CharInfo> _charInfo;
 };
