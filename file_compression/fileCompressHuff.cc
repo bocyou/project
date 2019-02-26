@@ -138,11 +138,12 @@ void fileCompressHuff::uncompressHuff(const std::string filePath) {
 			getLine(rd_fd, lineStr);
 		}
 		fileSize += atoll(lineStr.substr(2).c_str());
-		std::cout << lineStr << lineStr[0]  << std::endl;
-		_charInfo[lineStr[0]]._charCount = atoi(lineStr.c_str() + 2);
+		//std::cout << lineStr << lineStr[0]  << std::endl;
+		//string类中是char，插入到数组中需要强转为unsigned char
+		_charInfo[(unsigned char)lineStr[0]]._charCount = atoi(lineStr.c_str() + 2);
 
 	}
-	std::cout << fileSize << std::endl;
+	//std::cout << fileSize << std::endl;
 
 	//重构huffman树，
 	huffManTree huff;
