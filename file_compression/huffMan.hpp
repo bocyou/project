@@ -14,10 +14,10 @@ typedef unsigned char UCH;
 
 struct CharInfo {
 
-	CharInfo(long long count = 0) : _ch(0), _charCount(count), _charCode("") {}
+	CharInfo(size_t count = 0) :  _charCount(count) {}
 
 	UCH _ch;
-	long long _charCount;
+	size_t _charCount;
 	std::string _charCode;
 
 	bool operator!=(const CharInfo& ch) {
@@ -71,8 +71,7 @@ class huffManTree {
 			
 			for(size_t i = 0; i < tmpWeight.size(); i++) {
 				if(tmpWeight[i] != invalid) {
-					HNode *pCur = new HNode(tmpWeight[i]);
-					creatHeap.push(pCur);
+					creatHeap.push(new HNode(tmpWeight[i]));
 				}
 			}
 
@@ -85,8 +84,9 @@ class huffManTree {
 
 				HNode *newNode = new HNode(left->_weight + right->_weight);
 				newNode->_left = left;
-				newNode->_right = right;
 				left->_parent = newNode;
+
+				newNode->_right = right;
 				right->_parent = newNode;
 
 				creatHeap.push(newNode);
