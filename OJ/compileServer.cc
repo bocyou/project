@@ -18,8 +18,6 @@ int main()
 
 			//反序列化发送给客户端  fastwrite
 			Compile::compileRun(req_json, rsp_json);
-			Json::FastWriter writer;
-			writer.write(rsp_json);
 			rsp.set_content(rsp_json.toStyledString(), "text/plain");
 			});
 
