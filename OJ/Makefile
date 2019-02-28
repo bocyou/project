@@ -1,6 +1,6 @@
 .PHONY:clean
-src=cli.cc
-bin=cli
+src=compileServer.cc
+bin=compileServer
 
 $(bin):$(src)
 	g++ $^ -o $@ -std=c++11 -lpthread -ljsoncpp -g

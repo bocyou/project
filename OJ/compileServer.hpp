@@ -60,6 +60,7 @@ class Compile{
 				LOG(INFO, "compile error");
 				return false;
 			}
+			LOG(INFO, "compile done");
 
 			int ret_code = runPro(fileName);
 			if(ret_code != 0) {
@@ -72,6 +73,7 @@ class Compile{
 				LOG(INFO, "exec file error");
 				return false;
 			}
+			LOG(INFO, "run process done");
 
 			rsp["error"] = 0;
 			rsp["reason"] = "";
