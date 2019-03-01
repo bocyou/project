@@ -1,9 +1,19 @@
-.PHONY:clean
-src=compileServer.cc
-bin=compileServer
+.PHONY:clean all
+WORK_PATH=$(shell pwd)
+SELECT=$(WORK_PATH)/mysql_conn
+FLAG=-lpthread -ljsoncpp -std=c++11
+SRC=compileServer.cc
+BIN=compileServer
+cc=g++
 
-$(bin):$(src)
-	g++ $^ -o $@ -std=c++11 -lpthread -ljsoncpp -g
+all:select $(BIN)
+
+select:
+	cd $(SELECT); make clean; make; cd -;
+
+$(BIN):$(SRC)
+	$(cc) $^ -o $@ $(FLAG)
 
 clean:
-	rm $(bin) ./tmp/*
+	cd $(SELECT); make clean; cd -;
+	rm $(BIN) ./tmp/*

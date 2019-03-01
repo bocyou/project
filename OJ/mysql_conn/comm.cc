@@ -14,27 +14,27 @@ MYSQL *connectMysql() {
 }
 
 void selectMysql(MYSQL *my_fd) {
-	mysql_query(my_fd, "set names utf8");
+	mysql_query(my_fd, "set names utf8"); //解决查询中文编码问题
 
 	std::string sel_sql = "select * from oj_list";
-	mysql_query(my_fd, sel_sql.c_str());
+	mysql_query(my_fd, sel_sql.c_str());  //给数据库发送指令
 
 	MYSQL_RES *result = mysql_store_result(my_fd);
 
 	int rows = mysql_num_rows(result);
 	int cols = mysql_num_fields(result);
 
-	MYSQL_FIELD	*feild = mysql_fetch_fields(result);
+	MYSQL_FIELD	*feild = mysql_fetch_fields(result); //获取列信息
 
 	for(int i = 0; i < cols; i++) {
-		std::cout << feild[i].name << "|";
+		std::cout << feild[i].name << " | ";
 	}
 	std::cout << std::endl;
 
-	for(int i = 0; i < rows; i++) {
-		MYSQL_ROW line = mysql_fetch_row(result);
+	for(int i = 0; i < rows; i++) { 
+		MYSQL_ROW line = mysql_fetch_row(result); //查询行
 		for(int j = 0; j < cols; j++) {
-			std::cout << line[j] << "|";
+			std::cout << line[j] << " | ";
 		}
 		std::cout << std::endl;
 	}
