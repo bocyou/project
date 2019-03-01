@@ -14,6 +14,8 @@ MYSQL *connectMysql() {
 }
 
 void selectMysql(MYSQL *my_fd) {
+	mysql_query(my_fd, "set names utf8");
+
 	std::string sel_sql = "select * from oj_list";
 	mysql_query(my_fd, sel_sql.c_str());
 
