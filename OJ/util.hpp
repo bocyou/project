@@ -86,7 +86,7 @@ public:
 
 class boostUtil {
 public:
-	static void cutString(std::string& input_str, std::vector<std::string>& output_vec, std::string cut_str) {
+	static void cutString(const std::string& input_str, const std::vector<std::string>& output_vec, std::string cut_str) {
 		boost::split(output_vec, input_str, boost::is_any_of(cut_str), boost::token_compress_off);
 	}
 };
@@ -140,10 +140,10 @@ public:
 		// 先对用户输入的body进行&切分
 		std::vector<std::string> tmp_vec;
 		std::unordered_map<std::string, std::string> code_kv;
-		boostUtil::cutString(user_body, tmp_vec, ",");
+		boostUtil::cutString(user_body, tmp_vec, "&");
 
 		// 再进行urldecode解析，对等号进行切分
-		for(auto k : tmp_vec) {
+		for(const auto & k : tmp_vec) {
 			std::vector<std::string> code_vec;
 			boostUtil::cutString(k, code_vec, "=");
 			code_kv[code_vec[0]] = urlCodeParse::urlDecode(code_vec[1]);
