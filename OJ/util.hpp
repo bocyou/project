@@ -86,7 +86,7 @@ public:
 
 class boostUtil {
 public:
-	static void cutString(const std::string& input_str, const std::vector<std::string>& output_vec, std::string cut_str) {
+	static void cutString(const std::string& input_str, std::vector<std::string>& output_vec, std::string cut_str) {
 		boost::split(output_vec, input_str, boost::is_any_of(cut_str), boost::token_compress_off);
 	}
 };
@@ -136,7 +136,7 @@ public:
 
 class stringUtil {
 public:
-	static void codeToKv(std::string& user_body, Json::Value& req) {
+	static void codeToKv(const std::string& user_body, Json::Value& req) {
 		// 先对用户输入的body进行&切分
 		std::vector<std::string> tmp_vec;
 		std::unordered_map<std::string, std::string> code_kv;

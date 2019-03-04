@@ -18,8 +18,9 @@ int main()
 
 			//反序列化发送给客户端  fastwrite
 			Compile::compileRun(req_json, rsp_json);
-			rsp.set_content(rsp_json.toStyledString(), "text/plain");
-			});
+			Json::FastWriter writer;
+			rsp.set_content(writer.write(rsp_json), "text/plain");
+		});
 
 	svr.set_base_dir("./wwwroot");
 	svr.listen("0.0.0.0", 20000);

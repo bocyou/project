@@ -1,10 +1,14 @@
 #include <iostream>
 #include <unistd.h>
 
+enum star {
+	"简单",
+	"中等",
+	"困难",
+};
+
 int main()
 {
-	char  *list[] = {"g++", "file.cc", "-o", "file", "-std=c++11", NULL};
-	execvp("g++", list);
-	std::cout << "exec error" << std::endl;
+	std::cout << star[0] << std::endl;
 	return 0;
 }

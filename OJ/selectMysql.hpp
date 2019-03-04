@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <string>
 #include <string.h>
@@ -9,6 +10,7 @@
 #include <ostream>
 #include "./lib/include/mysql.h"
 
+
 struct Question {
 	std::string id;
 	std::string name;
@@ -17,25 +19,25 @@ struct Question {
 	std::string src;
 	std::string tail;
 
+#ifdef __DEBUG__
 	friend std::ostream& operator<<(std::ostream& cout, Question &q);
+#endif
 };
 
+#ifdef __DEBUG__
 std::ostream& operator<<(std::ostream& cout, Question &q) {
 	cout << q.id << " | " << q.name <<  " | " << q.diffcult << " | " << q.description << " | " << q.src << " | " << q.tail << std::endl;
 	return cout;
 }
+#endif 
 
 class Mysql{
 public:
 	static MYSQL *connectMysql() {
 		MYSQL *my_fd = mysql_init(NULL);
 
-		if(mysql_real_connect(my_fd, "127.0.0.1", "root", 
-					"zmy19980520", "OJ", 3306, NULL, 0) == NULL) {
-			std::cerr << "connect error" << std::endl;
-		} else {
-			std::cout << "connect success" << std::endl;
-		}
+		assert(mysql_real_connect(my_fd, "127.0.0.1", "username", 
+					"passwd", "database", 3306, NULL, 0) != NULL); 
 
 		return my_fd;
 	}
@@ -49,14 +51,14 @@ public:
 		MYSQL_RES *result = mysql_store_result(my_fd);
 
 		int rows = mysql_num_rows(result);
-		int cols = mysql_num_fields(result);
+		//int cols = mysql_num_fields(result);
 
-		MYSQL_FIELD	*feild = mysql_fetch_fields(result); //获取列信息
+		//MYSQL_FIELD	*feild = mysql_fetch_fields(result); //获取列信息
 
-		for(int i = 0; i < cols; i++) {
-			std::cout << feild[i].name << " | ";
-		}
-		std::cout << std::endl;
+		//for(int i = 0; i < cols; i++) {
+		//	std::cout << feild[i].name << " | ";
+		//}
+		//std::cout << std::endl;
 
 		for(int i = 0; i < rows; i++) { 
 			MYSQL_ROW line = mysql_fetch_row(result); //查询行
