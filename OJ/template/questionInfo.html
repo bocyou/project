@@ -5,13 +5,12 @@
 
 	<body>
 		<div>{{id}}   {{name}}   {{diffcult}} </div>
-		<div><pre> {{description}} </pre></div>
+		<div><pre>{{description}} </pre></div>
 
 			<form action="/compile/{{id}}" method=POST>
 				code:<br>
-				<textarea type="text" name="code" rows="20" cols="50"> {{src}}
+				<textarea type="text" name="code" rows="50" cols="100">{{src}}
 				</textarea>
-				<br><br>
 				<input type="submit" value="Submit">
 			</form> 
 	</body>

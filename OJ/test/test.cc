@@ -1,14 +1,19 @@
 #include <iostream>
 #include <unistd.h>
+#include <vector>
 
-enum star {
-	"简单",
-	"中等",
-	"困难",
+class myClass{
+public:
+	void func() {
+		std::cout << "hello world" << std::endl;
+	}
 };
 
 int main()
 {
-	std::cout << star[0] << std::endl;
+	std::vector<int> vec{1, 2, 3};
+	myClass cl;
+	cl.func();
 	return 0;
 }
+

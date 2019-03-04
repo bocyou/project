@@ -1,7 +1,7 @@
 #pragma once
 #include <sstream>
 #include "ojModel.hpp"
-#include "./lib/include/ctemplate/template.h"
+#include <ctemplate/template.h>
 
 static std::string leveToString(const std::string &str) {
 	int falg;
@@ -16,6 +16,7 @@ static std::string leveToString(const std::string &str) {
 		case 2:
 			return "困难";
 	}
+	return "";
 }
 
 class ojView{
@@ -47,5 +48,13 @@ public:
 		tpl->Expand(&html, &dict);
 	}
 
-	static void renderResult(const std::string& stdout, const std::string& reason, std::string& html) {}
+	static void renderResult(const std::string& stdout, const std::string& reason, std::string& html) {
+		ctemplate::TemplateDictionary dict("resultInfo");
+		dict.SetValue("stdout", stdout);
+		dict.SetValue("reason", reason);
+
+		ctemplate::Template* tpl;
+		tpl = ctemplate::Template::GetTemplate("./template/resultInfo.html", ctemplate::DO_NOT_STRIP);
+		tpl->Expand(&html, &dict);
+	}
 };

@@ -46,6 +46,7 @@ int main()
 			//根据编译结果构造最终网页
 			std::string html;
 			ojView::renderResult(rsp_json["stdout"].asString(), rsp_json["reason"].asString(), html);
+			rsp.set_content(html, "text/html");
 		});
 
 	svr.set_base_dir("./wwwroot");
