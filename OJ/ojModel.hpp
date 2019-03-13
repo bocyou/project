@@ -2,7 +2,6 @@
 
 #pragma	once
 #include "selectMysql.hpp"
-#include "util.hpp"
 
 class ojModel {
 private:
@@ -10,8 +9,9 @@ private:
 public:
 
 	void loadQueston() {
-		Mysql::selectForLoad(Mysql::connectMysql(), oj_model);
-		Mysql::closeMysql(Mysql::connectMysql());
+		Mysql::connectMysql();
+		Mysql::selectForLoad(oj_model);
+		Mysql::closeMysql();
 		LOG(INFO, "load " + std::to_string(oj_model.size()) + " questions");
 	}
 

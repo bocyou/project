@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <ostream>
 #include "./lib/include/mysql.h"
+#include "util.hpp"
 
 
 struct Question {
@@ -33,16 +34,15 @@ std::ostream& operator<<(std::ostream& cout, Question &q) {
 
 class Mysql{
 public:
-	static MYSQL *connectMysql() {
-		MYSQL *my_fd = mysql_init(NULL);
+	static void connectMysql() {
 
 		assert(mysql_real_connect(my_fd, "127.0.0.1", "username", 
 					"passwd", "database", 3306, NULL, 0) != NULL); 
 
-		return my_fd;
+		LOG(INFO, "connect msyql success");
 	}
 
-	static void selectForLoad(MYSQL *my_fd, std::map<std::string, Question>& oj_model) {
+	static void selectForLoad(std::map<std::string, Question>& oj_model) {
 		mysql_query(my_fd, "set names utf8"); //解决查询中文编码问题
 
 		std::string sel_sql = "select * from oj_list";
@@ -71,9 +71,15 @@ public:
 		}
 
 		free(result);
+		LOG(INFO, "select from sql done");
 	}
 
-	static void closeMysql(MYSQL *my_fd) {
+	static void closeMysql() {
 		mysql_close(my_fd);
+		LOG(INFO, "close msyql");
 	}
+private:
+	static MYSQL* my_fd;
 };
+
+MYSQL* Mysql::my_fd = mysql_init(NULL);
