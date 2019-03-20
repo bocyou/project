@@ -85,12 +85,12 @@ void fileCompressHuff::compressHuff(const std::string filePath) {
 				}
 			}
 		}
-		if(bitCount > 0 && bitCount < 8) {
-			(*flag) <<= (8-bitCount);
-			write(wr_fd, flag, 1);
-		}
 	}
 
+	if(bitCount > 0 && bitCount < 8) {
+		(*flag) <<= (8-bitCount);
+		write(wr_fd, flag, 1);
+	}
 	delete[] readBuff;
 	close(rd_fd);
 	close(wr_fd);
