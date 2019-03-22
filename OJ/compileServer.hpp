@@ -62,10 +62,15 @@ class Compile{
 			}
 			LOG(INFO, "compile done");
 
-			int ret_code = runPro(fileName);
+			std::string timeAndSpace;
+			int ret_code = runPro(fileName, timeAndSpace);
 			if(ret_code != 0) {
 				rsp["error"] = 2;
-				rsp["reason"] = "exec file error";
+				if(ret_code == 11){
+					rsp["reason"] = "Segmentation fault, 请检查函数逻辑,是否有越界访问或者栈溢出";
+				} else {
+					rsp["reason"] = "exec file error";
+				}
 				fileUtil::readFile(stdOutPath(fileName), stdOutMsg);
 				rsp["stdout"] = stdOutMsg;
 				fileUtil::readFile(stdErrPath(fileName), stdErrMsg);
@@ -76,11 +81,16 @@ class Compile{
 			LOG(INFO, "run process done");
 
 			rsp["error"] = 0;
-			rsp["reason"] = "";
+			if(timeAndSpace.empty()) {
+				rsp["reason"] = "";
+			} else {
+				rsp["reason"] = timeAndSpace;
+			}
 			fileUtil::readFile(stdOutPath(fileName), stdOutMsg);
 			rsp["stdout"] = stdOutMsg;
 			fileUtil::readFile(stdErrPath(fileName), stdErrMsg);
 			rsp["stderr"] = stdErrMsg;
+			LOG(INFO, "comlied " + fileName + " done");
 			return true;
 		}
 
@@ -136,9 +146,8 @@ class Compile{
 			return true;
 		}
 	
-		static int runPro(std::string fileName) {
+		static int runPro(std::string fileName, std::string& timeAndSpace) {
 			int status = 0;
-	
 	
 			int id = fork();
 	
@@ -146,8 +155,15 @@ class Compile{
 				LOG(ERROR, "fork error");
 				return -1;
 			} else if (id > 0) {
-				waitpid(id, &status, 0);
+				usleep(1000000);
+				pid_t err = waitpid(id, &status, WNOHANG);
+				if(err == 0) { // 设置WNOHANG属性，子进程没有结束，waitpid返回0
+					timeAndSpace = "算法时间复杂度过大, 请检查函数逻辑";
+					kill(id, 9);
+				}
+				return status & 0x7f;
 			} else {
+				system("ulimit -s 2000"); //设置栈空间大小
 				int stdIn_fd = open(stdInPath(fileName).c_str(), O_RDONLY);
 				dup2(stdIn_fd, 0);
 				int stdOut_fd = open(stdOutPath(fileName).c_str(), O_CREAT | O_WRONLY, 0644);
@@ -156,9 +172,7 @@ class Compile{
 				dup2(stdErr_fd, 2);
 				std::string exeName = fileName + ".exe";
 				execl(exeFilePath(fileName).c_str(), exeName.c_str(), NULL);
-				//exit(150);
+				exit(0);
 			}
-	
-			return status & 0x7f;
 		}
 };
