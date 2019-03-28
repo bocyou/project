@@ -65,16 +65,16 @@ int main()
         }
     }
     
-	//std::string city = arg;
-	//city = urlDecode(city);
-	//city += ".html";
-	//city = "~/Linux/project/weatfore/output/wwwroot/html/" + city;
-	
-	std::string city = "/home/zmy/Linux/project/weatfore/wwwroot/html/西安.html";
+	std::string city = arg;
+	city = urlDecode(city);
+	city = city.substr(7);
+	city += ".html";
+	city = "/home/zmy/Linux/project/weatfore/output/wwwroot/html/" + city;
+
 
 	int fd = open(city.c_str(), O_RDONLY);
 	if(fd < 0) {
-		std::cout << "open error" << std::endl;
+		std::cout << "search error" << std::endl;
 	}
 	char buf[1024] = {0};
 	while(read(fd, buf, sizeof(buf)-1) > 0) {
