@@ -18,8 +18,7 @@ cgi:
 clean:
 	rm -f $(bin)
 	cd search; make clean; cd -
-	cd sql_connect; make clean; cd -
-	# rm -rf output
+	rm -rf output
 
 .PHONY:output
 output:
