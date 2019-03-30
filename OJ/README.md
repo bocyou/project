@@ -13,11 +13,11 @@
 - 渲染(view)
   - 负责题目列表页与题目详情页的渲染
 
-###界面展示
+### 界面展示
 
-![ojShow](C:\Users\Administrator\Desktop\ojShow.png)
+![展示页面](https://github.com/Gzmy/project/blob/master/OJ/ojShow.png)
 
-###存在问题及优化
+### 存在问题及优化
 
 - 问题
   - 无法检测循环`fork`以及`system`函数, 极易危害服务器
