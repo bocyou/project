@@ -1,17 +1,11 @@
 #pragma once
 
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
+#include "../Log.hpp"
+#include <netdb.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/time.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
 #include <assert.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <time.h>
 
 class util {
 private:
@@ -59,5 +53,19 @@ public:
 		struct timeval	tv;
 		gettimeofday(&tv, NULL);
 		return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+	}
+
+	static void hostToAddr(const char* host, char* buf) {
+		struct hostent* my_host;
+		char tmp[32] = {0};
+
+		if((my_host = gethostbyname(host)) == NULL) {
+			LOG(ERROR, "get host err");
+			return ;
+		}
+
+		char **str = my_host->h_addr_list;
+		inet_ntop(my_host->h_addrtype, *str, tmp, sizeof(tmp));
+		strcpy(buf, tmp);
 	}
 };
