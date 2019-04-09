@@ -2,10 +2,9 @@
 #include "pthreadPoll.hpp"
 
 ///////////////////////////////////////////////////////////////
-// void addfd(int epoll_fd, int fd);
-// void setnonbloc(int fd);
-// void reset_onshot(int epoll_fd, int fd);
-// void addfd(int epoll_fd, int fd);
+void addEpollfd(int epoll_fd, int fd);
+void resetOneshot(int epoll_fd, int fd);
+void setNonBloc(int fd);
 void usage(const char* );
 int startup(int );
 int getLine(int, char*, int);
@@ -18,6 +17,31 @@ int exec_cgi(int , char*, char*, char* );
 int echo_www(int , char*, int );
 int handlerRequest(int );
 ///////////////////////////////////////////////////////////////
+
+void addEpollfd(int epoll_fd, int fd)  {
+	struct epoll_event ev;
+	ev.data.fd = fd;
+	ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev);
+	setNonBloc(fd);
+}
+
+void resetOneshot(int epoll_fd, int fd) {
+	struct epoll_event ev;
+	ev.data.fd = fd;
+	ev.events = EPOLLIN | EPOLLET | EPOLLONESHOT;
+	epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &ev);
+}
+
+void setNonBloc(int fd) {
+	int old_option = fcntl(fd, F_GETFL);
+	if(old_option < 0) {
+		LOG(ERROR, "fcntl error");
+		return;
+	}
+	int new_option = old_option | O_NONBLOCK;
+	fcntl(fd, F_SETFL, new_option);
+}
 
 void usage(const char *proc)
 {
@@ -77,7 +101,7 @@ int getLine(int sock, char line[], int len)
 
 void clearHeaer(int sock) //清理头部
 {
-	char line[MAX];
+	char line[MAX_SIZE];
 	do{
 		getLine(sock, line, sizeof(line));
 	}while(strcmp("\n", line));
@@ -85,7 +109,7 @@ void clearHeaer(int sock) //清理头部
 
 void show_400(int sock) 
 {
-	char line[MAX];
+	char line[MAX_SIZE];
 	struct stat st;
 	sprintf(line, "HTTP/1.0 400 Bad Request\r\n");
 	send(sock, line, strlen(line), 0);
@@ -103,7 +127,7 @@ void show_400(int sock)
 
 void show_404(int sock)
 {
-	char line[MAX];
+	char line[MAX_SIZE];
 	struct stat st;
 	sprintf(line, "HTTP/1.0 404 Not Found\r\n");
 	send(sock, line, strlen(line), 0);
@@ -116,12 +140,13 @@ void show_404(int sock)
 
 	stat(PAGE_404, &st);
 	sendfile(sock, fd, NULL, st.st_size);
+	LOG(INFO, "404 page done");
 	close(fd);
 }
 
 void show_500(int sock) 
 {
-	char line[MAX];
+	char line[MAX_SIZE];
 	struct stat st;
 	sprintf(line, "HTTP/1.0 500 Internal Server Error\r\n");
 	send(sock, line, strlen(line), 0);
@@ -156,11 +181,11 @@ void echoErrMsg(int sock, int status_code)
 
 int exec_cgi(int sock, char *method, char *path, char *query_string)
 {
-	char line[MAX];
+	char line[MAX_SIZE];
 	int content_length = -1;
-	char method_env[MAX/32];
-	char query_string_env[MAX];
-	char content_length_env[MAX/8];
+	char method_env[MAX_SIZE/32];
+	char query_string_env[MAX_SIZE];
+	char content_length_env[MAX_SIZE/8];
 
 	if(strcasecmp(method, "GET") == 0){
 		clearHeaer(sock); //清理头部
@@ -213,8 +238,6 @@ int exec_cgi(int sock, char *method, char *path, char *query_string)
 		exit(1);
 	}
 	else{
-		close(input[0]);
-		close(output[1]);
 
 		sprintf(line, "HTTP/1.0 200 OK\r\n");
 		send(sock, line, strlen(line), 0);
@@ -246,7 +269,7 @@ int exec_cgi(int sock, char *method, char *path, char *query_string)
 
 int echo_www(int sock, char *path, int size)
 {
-	char line[MAX];
+	char line[MAX_SIZE];
 	clearHeaer(sock);
 
 	int fd = open(path, O_RDONLY);
@@ -277,13 +300,15 @@ int echo_www(int sock, char *path, int size)
 	return 200;
 }
 
-int handlerRequest(int sock) //请求行
+int handlerRequest(struct all_fd* sock_epoll_fd) //请求行
 {
+	int epoll_hander = sock_epoll_fd->epoll_fd;
+	int sock = sock_epoll_fd->sock_fd;
 	int status_code = 200;
-	char line[MAX];
-	char method[MAX/16] = {0};
-	char url[MAX] = {0};
-	char path[MAX];
+	char line[MAX_SIZE];
+	char method[MAX_SIZE/16] = {0};
+	char url[MAX_SIZE] = {0};
+	char path[MAX_SIZE];
 	int cgi = 0;
 	char *query_string = NULL;
 
@@ -371,8 +396,10 @@ int handlerRequest(int sock) //请求行
 		LOG(INFO, "starting responce");
 		if(cgi == 1){
 			status_code = exec_cgi(sock, method, path, query_string);
+			resetOneshot(epoll_hander, sock);
 		}else{
 			status_code = echo_www(sock, path, st.st_size); //响应资源, 此处是get方法
+			resetOneshot(epoll_hander, sock);
 		}
 	}
 	
@@ -388,41 +415,104 @@ end:
 	//			  500:服务器执行发生错误
 	//			  503:服务器处于超负载或停机维护状态
 	if(status_code != 200){
+		LOG(INFO, "start err process");
 		echoErrMsg(sock, status_code);
+		resetOneshot(epoll_hander, sock);
 	}
 	LOG(INFO, "close sock");
 	close(sock);
 	return status_code;
 }
 
+void my_accept(int epoll_hander, int listen_sock) {
+	for( ; ; ) {
+		struct sockaddr_in client;
+		socklen_t len = sizeof(client);
+
+		int new_sock = accept(listen_sock, (struct sockaddr*)&client, &len);
+		if(new_sock < 0) {
+			LOG(INFO, "accept all sock");
+			break;
+		}
+
+		LOG(INFO, "get a new link, add epoll tree");
+		addEpollfd(epoll_hander, new_sock);
+	}
+}
+
+void serviceIo(int epoll_hander, struct epoll_event eventsRecv[], int num, int listen_sock, threadPoll* tp_) {
+	for(int i = 0; i < num; i++) {
+		int sock = eventsRecv[i].data.fd;
+		uint32_t events = eventsRecv[i].events;
+		if(sock == listen_sock && (events & EPOLLIN)) {
+			my_accept(epoll_hander, listen_sock); // 获取同一时间所有连接
+		} else if (events & EPOLLIN) {
+			// 服务器处理请求
+			Task t_;
+			struct all_fd sock_epoll_fd;
+			sock_epoll_fd.epoll_fd = epoll_hander;
+			sock_epoll_fd.sock_fd = sock;
+			t_.setTask(&sock_epoll_fd, handlerRequest);
+			tp_->pushTask(t_);
+		} else {
+			LOG(WARNING, "none things");
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	if(argc != 2){
+	if(argc != 2) {
 		usage(argv[0]);
 		return 1;
 	}
 
+	// 忽略SIGPIPE信号, 请求流量大, 客户端关闭, 服务器在写, 触发信号
+	// 导致线程退出, 进而导致服务器宕机
 	signal(SIGPIPE, SIG_IGN);
 
-	LOG(INFO, "Start server");
-	int listen_sock = startup(atoi(argv[1]));
-
-
-	for( ; ; ){
-		struct sockaddr_in client;
-		socklen_t len = sizeof(client);
-		int sock = accept(listen_sock, (struct sockaddr*)&client, &len);
-		if(sock < 0){
-			perror("accept");
-			continue;
-		}
-
-		LOG(INFO, "get a new link, handlerRequest...");
-
-		Task t_;
-		threadPoll *tp_ = new threadPoll();
-		tp_->initPthread();
-		t_.setTask(sock, handlerRequest);
-		tp_->pushTask(t_);
+	int epoll_hander = epoll_create(EPOLL_MAX);
+	if(epoll_hander < 0) {
+		LOG(ERROR, "epoll create err");
+		exit(1);
 	}
+
+	// 监听套接字不可以EPOLLONESHOT属性, 否则以后的连接都不能接收
+	int listen_sock = startup(atoi(argv[1]));
+	struct epoll_event ev;
+	ev.data.fd = listen_sock;
+	ev.events = EPOLLIN | EPOLLET;
+	setNonBloc(listen_sock);
+	epoll_ctl(epoll_hander, EPOLL_CTL_ADD, listen_sock, &ev); 
+
+	struct epoll_event eventsRecv[MAX_SIZE];
+	LOG(INFO, "Start server");
+
+	// 启动线程池
+	threadPoll *tp_ = new threadPoll();
+	tp_->initPthread();
+	for( ; ; ){
+		int num = epoll_wait(epoll_hander, eventsRecv, sizeof(eventsRecv)/sizeof(eventsRecv[0]), -1);
+		switch(num) {
+			case 0:
+				LOG(INFO, "epoll wait time out");
+				break;
+			case -1:
+				LOG(ERROR, "epoll wait err");
+			default:
+				serviceIo(epoll_hander, eventsRecv, num, listen_sock, tp_);
+				break;
+		}
+		//struct sockaddr_in client;
+		//socklen_t len = sizeof(client);
+		//int sock = accept(listen_sock, (struct sockaddr*)&client, &len);
+		//if(sock < 0){
+		//	perror("accept");
+		//	continue;
+		//}
+
+		//LOG(INFO, "get a new link, handlerRequest...");
+
+	}
+	close(epoll_hander);
 }
