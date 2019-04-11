@@ -1,15 +1,17 @@
-#include "ojModel.hpp"
 #include "compileServer.hpp"
 #include "ojView.hpp"
+#include "ojModel.hpp"
+#include "userManage.hpp"
 #include "httplib.h"
-#include <jsoncpp/json/json.h>
 
 int main()
 {
 	httplib::Server svr;
 	ojModel oj;
 	oj.loadQueston();
-	svr.Get("/questionList", [&oj](const httplib::Request& req, httplib::Response& rsp) {
+
+	// questionList
+	svr.Get("/", [&oj](const httplib::Request& req, httplib::Response& rsp) {
 			(void)req;
 			std::vector<Question> questionList;
 			oj.getAllQuestions(questionList);
@@ -20,6 +22,7 @@ int main()
 			rsp.set_content(html, "text/html");
 		});
 
+	// questionInfo
 	svr.Get(R"(/questionInfo/(\d+))", [&oj](const httplib::Request& req, httplib::Response& rsp) {
 			Question que;
 			oj.getInfoQuestion(req.matches[1].str(), que);
@@ -28,6 +31,37 @@ int main()
 			rsp.set_content(html, "text/html");
 		});
 
+	// userLogin
+	svr.Post("/login", [](const httplib::Request& req, httplib::Response& rsp){
+			Json::Value user_pass;
+			std::string inforMation;
+			stringUtil::codeToKv(req.body, user_pass);
+
+			std::string html;
+			long user_id = -1;
+
+			userManage::userLogin(user_pass, inforMation, user_id);
+
+			userMangeView::renderUser(html, inforMation, user_id);
+			rsp.set_content(html, "text/html");
+		});
+
+	// userRegist
+	svr.Post("/register", [](const httplib::Request& req, httplib::Response& rsp){
+			Json::Value user_pass;
+			std::string inforMation;
+			stringUtil::codeToKv(req.body, user_pass);
+
+			std::string html;
+			long user_id = -1;
+
+			userManage::userRegister(user_pass, inforMation, user_id);
+
+			userMangeView::renderUser(html, inforMation, user_id);
+			rsp.set_content(html, "text/html");
+		});
+
+	// compileRun
 	svr.Post(R"(/compile/(\d+))", [&oj](const httplib::Request& req, httplib::Response& rsp) {
 			// 解析题目
 			Question que;

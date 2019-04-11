@@ -1,7 +1,7 @@
 #pragma once
 #include <sstream>
-#include "ojModel.hpp"
 #include <ctemplate/template.h>
+#include "ojModel.hpp"
 
 static std::string leveToString(const std::string &str) {
 	int falg;
@@ -33,6 +33,7 @@ public:
 		ctemplate::Template* tpl;
 		tpl = ctemplate::Template::GetTemplate("./template/questionList.html", ctemplate::DO_NOT_STRIP);
 		tpl->Expand(&html, &dict);
+		LOG(INFO, "render question list done");
 	}
 
 	static void renderQuestionInfo(const Question& que, std::string &html) {
@@ -46,15 +47,33 @@ public:
 		ctemplate::Template* tpl;
 		tpl = ctemplate::Template::GetTemplate("./template/questionInfo.html", ctemplate::DO_NOT_STRIP);
 		tpl->Expand(&html, &dict);
+		LOG(INFO, "render question info done");
 	}
 
-	static void renderResult(const std::string& stdout, const std::string& reason, std::string& html) {
+	static void renderResult(const std::string& str_stdout, const std::string& reason, std::string& html) {
 		ctemplate::TemplateDictionary dict("resultInfo");
-		dict.SetValue("stdout", stdout);
+		dict.SetValue("stdout", str_stdout);
 		dict.SetValue("reason", reason);
 
 		ctemplate::Template* tpl;
 		tpl = ctemplate::Template::GetTemplate("./template/resultInfo.html", ctemplate::DO_NOT_STRIP);
 		tpl->Expand(&html, &dict);
+		LOG(INFO, "render result done");
 	}
+};
+
+class userMangeView {
+public:
+	static void renderUser(std::string& html, std::string& inforMation, long user_id) {
+		ctemplate::TemplateDictionary dict("userMange");
+		dict.SetValue("info", inforMation);
+		dict.SetValue("userid", std::to_string(user_id));
+
+		ctemplate::Template* tpl;
+		tpl = ctemplate::Template::GetTemplate("./template/userMange.html", ctemplate::DO_NOT_STRIP);
+		tpl->Expand(&html, &dict);
+		LOG(INFO, "render usermange done");
+	}
+
+
 };

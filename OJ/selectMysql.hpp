@@ -1,11 +1,7 @@
 #pragma once
-#include <iostream>
-#include <string>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <vector>
-#include <map>
 #include <unistd.h>
 #include <ostream>
 #include "./lib/include/mysql.h"
@@ -36,10 +32,14 @@ class Mysql{
 public:
 	static void connectMysql() {
 
-		assert(mysql_real_connect(my_fd, "127.0.0.1", "username", 
-					"passwd", "database", 3306, NULL, 0) != NULL); 
+		my_fd = mysql_init(NULL);
+		assert(mysql_real_connect(my_fd, "127.0.0.1", "root", 
+					"zmy19980520", "OJ", 3306, NULL, 0) != NULL); 
 
-		LOG(INFO, "connect msyql success");
+		// 设置客户端字符编码为utf8
+		assert(mysql_set_character_set(my_fd, "utf8") == 0);
+
+		LOG(INFO, "connect sql success");
 	}
 
 	static void selectForLoad(std::map<std::string, Question>& oj_model) {
@@ -74,12 +74,74 @@ public:
 		LOG(INFO, "select from sql done");
 	}
 
+	static long insert_user(std::string& user, std::string& pass) {
+		// insert into oj_users (username, password) values ("zmy", "****")
+		// std::string insert_query = "INSERT INTO oj_users (username, password) VALUES (\"";
+		// insert_query += user;
+		// insert_query += "\", \"";
+		// insert_query += pass;
+		// insert_query += "\")";
+
+		
+		// 下面的是PASSWORD函数, 用于web服务加密密码
+		std::string insert_query = "INSERT INTO oj_users (username, password) VALUES ('"
+								 + user 
+								 + "', PASSWORD('"
+								 + pass 
+								 + "'))";
+
+		if(mysql_query(my_fd, insert_query.c_str())) {
+			LOG(WARNING, "insert user err");
+			return -1;
+		}
+
+		mysql_use_result(my_fd);
+
+		return (long)mysql_insert_id(my_fd);
+	}
+
+	static long login_user(std::string& user, std::string& pass) {
+		std::string login_query = "SELECT id FROM oj_users WHERE username = '"
+								+ user 
+								+ "' AND PASSWORD = PASSWORD('"
+								+ pass 
+								+ "')";
+
+		if(mysql_query(my_fd, login_query.c_str())) {
+			LOG(WARNING, "search login err");
+			return -1;
+		}
+
+		MYSQL_RES* result = mysql_store_result(my_fd);
+		if(result == nullptr) {
+			LOG(INFO, "mysql result is nullptr");
+			return -1;
+		}
+
+		auto nums = mysql_num_rows(result);
+		if(nums == 0) {
+			mysql_free_result(result);
+			LOG(INFO, "The query result is empty");
+			return -2;
+		}
+
+		MYSQL_ROW row;
+		long id = -1;
+		while((row = mysql_fetch_row(result))) {
+			id = atol(row[0]);
+		}
+
+		mysql_free_result(result); // 释放结果集
+
+		return id;
+	}
+
 	static void closeMysql() {
 		mysql_close(my_fd);
-		LOG(INFO, "close msyql");
+		LOG(INFO, "close sql done");
 	}
 private:
-	static MYSQL* my_fd;
+	static MYSQL *my_fd;
 };
 
 MYSQL* Mysql::my_fd = mysql_init(NULL);
