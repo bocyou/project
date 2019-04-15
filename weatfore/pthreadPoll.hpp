@@ -9,19 +9,19 @@
 
 #define NUM 5
 
-typedef int (*handler_t)(int);
+typedef int (*handler_t)(struct all_fd*);
 
 class Task {
 private:
-	int _sock;
+	struct all_fd* _sock;
 	handler_t _handler;
 public:
 	Task() {
-		_sock = -1;
+		_sock = NULL;
 		_handler = NULL;
 	}
 
-	void setTask(int sock, handler_t handler) {
+	void setTask(struct all_fd* sock, handler_t handler) {
 		_sock = sock;
 		_handler = handler;
 		LOG(INFO, "add task done");

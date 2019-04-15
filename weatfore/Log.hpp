@@ -17,11 +17,14 @@
 #include <sys/socket.h>
 #include <sys/sendfile.h>
 #include <arpa/inet.h>
+#include <sys/epoll.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/epoll.h>
 
-#define MAX 1024
+#define MAX_SIZE 1024
+#define BUFF_SIZE 1024 
+#define EPOLL_MAX 256
 #define HOME_PAGE "index.html"
 #define PAGE_404 "wwwroot/404.html"
 #define PAGE_400 "wwwroot/400.html"
@@ -31,6 +34,11 @@
 #define INFO 0
 #define WARNING 1
 #define ERROR 2
+
+struct all_fd {
+	int epoll_fd;
+	int sock_fd;
+};
 
 uint64_t getTimeStap() {
 	struct timeval time;
