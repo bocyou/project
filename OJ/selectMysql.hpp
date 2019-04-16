@@ -33,8 +33,8 @@ public:
 	static void connectMysql() {
 
 		my_fd = mysql_init(NULL);
-		assert(mysql_real_connect(my_fd, "127.0.0.1", "root", 
-					"zmy19980520", "OJ", 3306, NULL, 0) != NULL); 
+		assert(mysql_real_connect(my_fd, "127.0.0.1", "username", 
+					"password", "database", 3306, NULL, 0) != NULL); 
 
 		// 设置客户端字符编码为utf8
 		assert(mysql_set_character_set(my_fd, "utf8") == 0);

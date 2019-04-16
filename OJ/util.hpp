@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <map>
 #include <unordered_map>
 #include <sys/time.h>
 #include <jsoncpp/json/json.h>
