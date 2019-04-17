@@ -45,6 +45,15 @@ class Compile{
 
 			const std::string& code = req["code"].asString();
 			const std::string& msgStdIn = req["stdin"].asString();
+
+			// 在提交代码中屏蔽 system 和 fork, pthread_create, 
+			if(!leageSource(code)) {
+				rsp["error"] = 3;
+				rsp["reason"] = "User submitted fields may compromise the server";
+				LOG(WARNING, "maby have fork system pthread_create");
+				return false;
+			}
+
 			std::string fileName = writeInfo(code, msgStdIn);
 			std::string stdOutMsg;
 			std::string stdErrMsg;
@@ -105,6 +114,20 @@ class Compile{
 			fileUtil::writeFile(srcFilePath(fileName), code);
 			fileUtil::writeFile(stdInPath(fileName), msgStdIn);
 			return fileName;
+		}
+
+		static bool leageSource(const std::string& source) {
+			if(source.find("system") != std::string::npos) {
+				return false;
+			}
+			if(source.find("fork") != std::string::npos) {
+				return false;
+			}
+			if(source.find("pthread_create") != std::string::npos) {
+				return false;
+			}
+
+			return true;
 		}
 
 		static bool compile(std::string fileName) {
