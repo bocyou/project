@@ -21,6 +21,12 @@ struct Question {
 #endif
 };
 
+struct Comment {
+	std::string userId;
+	std::string timeStmp; // 用户评论时间戳
+	std::string comment;
+};
+
 #ifdef __DEBUG__
 std::ostream& operator<<(std::ostream& cout, Question &q) {
 	cout << q.id << " | " << q.name <<  " | " << q.diffcult << " | " << q.description << " | " << q.src << " | " << q.tail << std::endl;
@@ -33,8 +39,8 @@ public:
 	static void connectMysql() {
 
 		my_fd = mysql_init(NULL);
-		assert(mysql_real_connect(my_fd, "127.0.0.1", "username", 
-					"password", "database", 3306, NULL, 0) != NULL); 
+		assert(mysql_real_connect(my_fd, "127.0.0.1", "root", 
+					"gzy19980520", "OJ", 3306, NULL, 0) != NULL); 
 
 		// 设置客户端字符编码为utf8
 		assert(mysql_set_character_set(my_fd, "utf8") == 0);
@@ -45,7 +51,7 @@ public:
 	static void selectForLoad(std::map<std::string, Question>& oj_model) {
 		mysql_query(my_fd, "set names utf8"); //解决查询中文编码问题
 
-		std::string sel_sql = "select * from oj_list";
+		std::string sel_sql = "SELECT * FROM oj_list";
 		mysql_query(my_fd, sel_sql.c_str());  //给数据库发送指令
 
 		MYSQL_RES *result = mysql_store_result(my_fd);
@@ -68,6 +74,39 @@ public:
 			oj_model[line[0]].description = line[3];
 			oj_model[line[0]].src = line[4];
 			oj_model[line[0]].tail = line[5];
+		}
+
+		free(result);
+		LOG(INFO, "select from sql done");
+	}
+
+	static void selectForComm(const std::string& id, std::vector<Comment>& userComm) {
+
+		mysql_query(my_fd, "set names utf8"); //解决查询中文编码问题
+
+		std::string sel_sql = "SELECT * FROM oj_comm WHERE id = ";
+		sel_sql += id;
+		mysql_query(my_fd, sel_sql.c_str());  //给数据库发送指令
+
+		MYSQL_RES *result = mysql_store_result(my_fd);
+
+		int rows = mysql_num_rows(result);
+		//int cols = mysql_num_fields(result);
+
+		//MYSQL_FIELD	*feild = mysql_fetch_fields(result); //获取列信息
+
+		//for(int i = 0; i < cols; i++) {
+		//	std::cout << feild[i].name << " | ";
+		//}
+		//std::cout << std::endl;
+
+		for(int i = 0; i < rows; i++) { 
+			MYSQL_ROW line = mysql_fetch_row(result); //查询行
+			Comment tmpComm;
+			tmpComm.userId = line[0];
+			tmpComm.timeStmp = line[1];
+			tmpComm.comment = line[2];
+			userComm.push_back(tmpComm);
 		}
 
 		free(result);

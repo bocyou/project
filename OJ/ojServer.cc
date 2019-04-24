@@ -25,10 +25,19 @@ int main()
 	// questionInfo
 	svr.Get(R"(/questionInfo/(\d+))", [&oj](const httplib::Request& req, httplib::Response& rsp) {
 			Question que;
-			oj.getInfoQuestion(req.matches[1].str(), que);
+			if(oj.getInfoQuestion(req.matches[1].str(), que)) {
+				// id查找到再加载评论	
+			}
 			std::string html;
 			ojView::renderQuestionInfo(que, html);
 			rsp.set_content(html, "text/html");
+		});
+	svr.Post(R"(/questionInfo/(\d+)/comment)", [](const httplib::Request& req, httplib::Response& rsp){
+			Json::Value user_comm;
+			stringUtil::codeToKv(req.body, user_comm);
+
+			std::cout << req.matches[1].str() << "-> " << user_comm["comment"].asString() << std::endl;
+			rsp.set_content("i got it", "text/plan");
 		});
 
 	// userLogin
@@ -82,6 +91,8 @@ int main()
 			ojView::renderResult(rsp_json["stdout"].asString(), rsp_json["reason"].asString(), html);
 			rsp.set_content(html, "text/html");
 		});
+
+
 
 	svr.set_base_dir("./wwwroot");
 	svr.listen("0.0.0.0", 20000);
