@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/algorithm/string.hpp>
 #include "util.hpp"
 #include "selectMysql.hpp"
 
@@ -17,8 +18,8 @@ public:
 
 		Mysql::connectMysql();
 		user_id = Mysql::insert_user(user, pass);
-		Mysql::closeMysql();
 		fail_reason = "用户注册成功";
+		Mysql::closeMysql();
 
 		return true;
 	}
@@ -46,13 +47,33 @@ public:
 	}
 
 private:
-	static bool check_user_pass(std::string& user, std::string& pass, std::string& fail_reason) {
+	static bool check_user_pass(std::string user, std::string pass, std::string& fail_reason) {
 		if(user.empty()) {
 			fail_reason = "用户名不能为空";
 			return false;
 		} else if (pass.empty()) {
 			fail_reason = "密码不能为空";
 			return false;
+		}
+
+		boost::to_upper(user);
+		boost::to_upper(pass);
+
+		std::vector<std::string> sql_comm {"MYSQL", "SELECT", "CREATE", "DROP", 
+			"SHOW", "USE", "DELETE", "INSERT", "UPDATA", "TABLE", "DATABASE"};
+
+		for(auto sql : sql_comm) {
+			if(user.find(sql) != std::string::npos) {
+				fail_reason = "请勿使用SQL语句, 谢谢配合!";
+				return false;
+			}
+		}
+
+		for(auto sql : sql_comm) {
+			if(pass.find(sql) != std::string::npos) {
+				fail_reason = "请勿使用SQL语句, 谢谢配合!";
+				return false;
+			}
 		}
 		return true;
 	}
